@@ -1,0 +1,5 @@
+meet-accountmanager (0.1.0-1) unstable; urgency=medium
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- James Lowry <jlowry@unknown>  Thu, 14 Jan 2021 14:01:11 +0000
