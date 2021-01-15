@@ -131,3 +131,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# building .debs
+.pybuild/
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/python3-meet-accountmanager.postinst.debhelper
+debian/python3-meet-accountmanager.prerm.debhelper
+debian/python3-meet-accountmanager.substvars
+debian/python3-meet-accountmanager/
