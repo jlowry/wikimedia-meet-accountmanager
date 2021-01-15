@@ -12,7 +12,8 @@ Type=notify
 DynamicUser=yes
 # see http://0pointer.net/blog/dynamic-users-with-systemd.html
 StateDirectory=meet-accountmanager
-ExecStart=/usr/bin/gunicorn meet-accountmanager.wsgi
+WorkingDirectory=/var/lib/meet-accountmanager
+ExecStart=/usr/bin/gunicorn meet_accountmanager:app
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5
