@@ -140,3 +140,4 @@ debian/python3-meet-accountmanager.postinst.debhelper
 debian/python3-meet-accountmanager.prerm.debhelper
 debian/python3-meet-accountmanager.substvars
 debian/python3-meet-accountmanager/
+debian/files
