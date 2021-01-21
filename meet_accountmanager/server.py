@@ -9,20 +9,23 @@ from flask import Flask, render_template, request, redirect
 
 app = Flask(__name__)
 clients = ['http://jitsi.meet.eqiad.wmflabs:4000']
-current_dir = os.path.dirname(os.path.realpath(__file__))
-tokens_path = os.path.join(current_dir, 'tokens.json')
-token_path = os.path.join(current_dir, 'token')
-salt_path = os.path.join(current_dir, 'salt')
+config_dir = os.path.dirname(os.path.realpath('/etc/meet-accountmanager'))
+password_path = os.path.join(config_dir, 'password')
+salt_path = os.path.join(config_dir, 'salt')
+state_dir = os.path.dirname(os.path.realpath('/var/lib/meet-accountmanager'))
+tokens_path = os.path.join(state_dir, 'tokens.json')
+
+def create_user(user, password):
+    subprocess.run(['sudo', '-u', 'prosody', 'prosodyctl', '--config', '/config/prosody.cfg.lua', 'register', user, 'meet.jitsi', password])
 
 
 def auth_ticketmaster(password):
     time.sleep(2)
-    with open(token_path, 'r') as f:
-        ticketmaster_token = f.read().strip()
-    with open(salt_path, 'r') as f:
-        salt = bytes(f.read(), 'utf-8')
+    with open(password_path, 'r') as password_file, open(salt_path, 'r') as salt_file:
+        ticketmaster_password = bytes.fromhex(password_file.read())
+        salt = bytes.fromhex(salt_file.read())
     dk = hashlib.pbkdf2_hmac('sha256', bytes(password, 'utf-8'), salt, 100000)
-    return dk.hex() == ticketmaster_token
+    return dk == ticketmaster_password
 
 
 def auth_token(token):
@@ -75,14 +78,11 @@ def create_user_post():
     if not auth_token(request.form['token'].strip()):
         time.sleep(10)
         return render_template('create.html', invalid_token=True)
-    for client in clients:
-        requests.post(
-            client + '/create',
-            {
-                'user': request.form['user'],
-                'password': request.form['password']
-            }
-        )
+
+    user = request.form['user']
+    password = request.form['password']
+    create_user(user, password)
+
     return render_template('success.html')
 
 

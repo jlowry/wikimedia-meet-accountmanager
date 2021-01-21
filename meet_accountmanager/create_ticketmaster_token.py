@@ -3,7 +3,7 @@ from os import urandom
 from getpass import getpass
 
 def main():
-    token = getpass(prompt='Enter new token: ')
+    token = getpass(prompt='Enter new ticketmaster password: ')
 
     with open('salt', 'w') as f:
         salt = urandom(16)
@@ -11,7 +11,7 @@ def main():
 
     with open('salt', 'r') as s:
         salt = bytes.fromhex(s.read())
-        with open('token', 'w') as f:
+        with open('password', 'w') as f:
             f.write(pbkdf2_hmac('sha256', bytes(token, 'utf-8'), salt, 100000).hex())
 
 if __name__ == "__main__":
