@@ -18,21 +18,40 @@ set -e
 # the debian-policy package
 
 SUDOERS_FILE=/etc/sudoers.d/meet-accountmanager
-CONFIG_DIR=/etc/meet-accountmananger
+CONFIG_DIR=/etc/meet-accountmanager
 SALT_FILE="$CONFIG_DIR/salt"
 TOKEN_FILE="$CONFIG_DIR/token"
+USER=meet-accountmanager
+STATE_DIR=/var/lib/meet-accountmanager
+LOG_DIR=/var/log/meet-accountmanager
 
 case "$1" in
     configure)
+	adduser --quiet --system --home "$STATE_DIR" --group $USER
+	if [ ! -d "$STATE_DIR" ]; then
+	    mkdir -p "$STATE_DIR" \
+	    && echo "Created state dir $STATE_DIR" \
+	    && chown -R $USER:$USER "$STATE_DIR"
+	fi
+	if [ ! -d "$LOG_DIR" ]; then
+	    mkdir -p "$LOG_DIR" \
+	    && echo "Created log dir $LOG_DIR" \
+	    && chown -R $USER:$USER "$LOG_DIR"
+	fi
 	if [ ! -d "$CONFIG_DIR" ]; then
-	    mkdir "$CONFIG_DIR" \
+	    mkdir -p "$CONFIG_DIR" \
 	    && echo "Created config dir $CONFIG_DIR"
 	fi
 	if [ -d "$CONFIG_DIR" ] && ! [ -f "$SALT_FILE" -a -f "$TOKEN_FILE" ]; then
 	    cd $CONFIG_DIR
 	    /usr/bin/python3 /usr/lib/python3/dist-packages/meet_accountmanager/create_ticketmaster_token.py
 	fi
-	SUDOER='meet-accountmanager ALL=(prosody) NOPASSWD:/usr/bin/prosodyctl'
+	SUDOER=$(cat <<-'EOF'
+		Defaults:meet-accountmanager !requiretty
+		meet-accountmanager ALL=(prosody) NOPASSWD:/usr/bin/prosodyctl
+		EOF
+	)
+#	SUDOER=$('meet-accountmanager ALL=(prosody) NOPASSWD:/usr/bin/prosodyctl')
         echo "$SUDOER" | visudo -qc -f - && \
 	echo "$SUDOER" > "$SUDOERS_FILE" && \
 	chmod 440 "$SUDOERS_FILE"

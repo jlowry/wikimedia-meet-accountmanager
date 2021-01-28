@@ -15,13 +15,13 @@
 
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a class="navbar-brand" href="/create">Wikimedia Meet Accounts</a>
+                <a class="navbar-brand" href="{{ url_for('create_user') }}">Wikimedia Meet Accounts</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/create">Create account</a>
+                <a class="nav-link" href="{{ url_for('create_user') }}">Create account</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/generate_token">Admin view</a>
+		    <a class="nav-link" href="{{ url_for('generate_token') }}">Admin view</a>
             </li>
         </ul>
     </div>

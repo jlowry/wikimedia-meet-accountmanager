@@ -2,22 +2,35 @@ import hashlib
 import json
 import time
 import os
+import subprocess
+from subprocess import STDOUT, PIPE
 from secrets import token_hex
-
+from logging.handlers import RotatingFileHandler
 import requests
 from flask import Flask, render_template, request, redirect
+from flask.logging import default_handler
 
 app = Flask(__name__)
+if 'APP_SETTINGS' in os.environ:
+    app.config.from_envvar('APP_SETTINGS')
+    if app.config.LOG_FILE:
+        app.logger.removeHandler(default_handler)
+        app.logger.addHandler(RotatingFileHandler(app.config.log_file, maxBytes=2000, backupCount=10))
+
 clients = ['http://jitsi.meet.eqiad.wmflabs:4000']
-config_dir = os.path.dirname(os.path.realpath('/etc/meet-accountmanager'))
+config_dir = os.path.realpath('/etc/meet-accountmanager')
 password_path = os.path.join(config_dir, 'password')
 salt_path = os.path.join(config_dir, 'salt')
-state_dir = os.path.dirname(os.path.realpath('/var/lib/meet-accountmanager'))
+state_dir = os.path.realpath('/var/lib/meet-accountmanager')
 tokens_path = os.path.join(state_dir, 'tokens.json')
 
-def create_user(user, password):
-    subprocess.run(['sudo', '-u', 'prosody', 'prosodyctl', '--config', '/config/prosody.cfg.lua', 'register', user, 'meet.jitsi', password])
-
+def register_account(user, password):
+    completed_process = subprocess.run(['/usr/bin/sudo', '-u', 'prosody', '/usr/bin/prosodyctl', '--config', '/etc/prosody/prosody.cfg.lua', 'register', user, 'jitsi.localdev', password], stdout=PIPE, stderr=STDOUT, encoding="utf-8")
+    if completed_process.returncode == 0:
+        app.logger.info(f"registered user: {user}")
+    else:
+        app.logger.error(f"Problem creating user: {user} with prosodyctl register")
+        app.logger.error(f"prosodyctl output:\n{completed_process.stdout}")
 
 def auth_ticketmaster(password):
     time.sleep(2)
@@ -52,7 +65,7 @@ def gen_token():
 
 @app.route("/")
 def hello():
-    return redirect('/create')
+    return redirect(url_for('create_user'))
 
 
 @app.route("/generate_token", methods=['GET'])
@@ -81,7 +94,7 @@ def create_user_post():
 
     user = request.form['user']
     password = request.form['password']
-    create_user(user, password)
+    register_account(user, password)
 
     return render_template('success.html')
 

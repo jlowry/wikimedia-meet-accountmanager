@@ -5,11 +5,14 @@ After=network.target
 
 [Service]
 Type=notify
-DynamicUser=yes
-StateDirectory=meet-accountmanager
-LogsDirectory=meet-accountmanager
+# DynamicUser=yes
+# StateDirectory=meet-accountmanager
+# LogsDirectory=meet-accountmanager
+User=meet-accountmanager
+Group=meet-accountmanager
 WorkingDirectory=/var/lib/meet-accountmanager
 Environment=GUNICORN_CMD_ARGS="--access-logfile /var/log/meet-accountmanager/access.log --error-logfile /var/log/meet-accountmanager/gunicorn-error.log"
+Environment=APP_SETTINGS=/etc/meet-accountmanager/settings.cfg
 ExecStart=/usr/bin/gunicorn meet_accountmanager:app
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
