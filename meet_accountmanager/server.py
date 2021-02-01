@@ -7,15 +7,15 @@ from subprocess import STDOUT, PIPE
 from secrets import token_hex
 from logging.handlers import RotatingFileHandler
 import requests
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for
 from flask.logging import default_handler
 
 app = Flask(__name__)
 if 'APP_SETTINGS' in os.environ:
     app.config.from_envvar('APP_SETTINGS')
-    if app.config.LOG_FILE:
+    if 'LOG_FILE' in app.config:
         app.logger.removeHandler(default_handler)
-        app.logger.addHandler(RotatingFileHandler(app.config.log_file, maxBytes=2000, backupCount=10))
+        app.logger.addHandler(RotatingFileHandler(app.config['LOG_FILE'], maxBytes=2000, backupCount=10))
 
 clients = ['http://jitsi.meet.eqiad.wmflabs:4000']
 config_dir = os.path.realpath('/etc/meet-accountmanager')
@@ -54,11 +54,12 @@ def auth_token(token):
 
 
 def gen_token():
-    with open(tokens_path, 'r') as f:
-        tokens = json.loads(f.read())
     token = token_hex(32)
-    tokens.append(token)
-    with open(tokens_path, 'w') as f:
+    with open(tokens_path, 'a+') as f:
+        f.seek(0)
+        tokens = json.loads(f.read())
+        tokens.append(token)
+        f.seek(0)
         f.write(json.dumps(tokens))
     return token
 
