@@ -55,7 +55,7 @@ def auth_token(token):
 
 def gen_token():
     token = token_hex(32)
-    with open(tokens_path, 'a+') as f:
+    with open(tokens_path, 'r+') as f:
         f.seek(0)
         tokens = json.loads(f.read())
         tokens.append(token)
