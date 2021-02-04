@@ -7,16 +7,13 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet"
           href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/twitter-bootstrap/4.4.0/css/bootstrap.min.css">
-    <title>Wikimedia Meet Account Manager</title>
+    <title>Meet Account Manager, Foundation for Public Code</title>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
 
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-                <a class="navbar-brand" href="{{ url_for('create_user') }}">Wikimedia Meet Accounts</a>
-            </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('create_user') }}">Create account</a>
             </li>
@@ -32,12 +29,12 @@
     {% block content %}{% endblock %}
 
     <hr/>
-    <a href="/">Wikimedia Meet Account Manager</a>
+    <a href="/">Foundation for Public Code Meet Account Manager</a>
     &middot;
-    <a href="https://meet.wmcloud.org" class="text-muted">
-        meet.wmcloud.org</a>
+    <a href="https://meet.publiccode.net" class="text-muted">
+        meet.publiccode.net</a>
     &middot;
-    <a href="https://phabricator.wikimedia.org/tag/wikimedia_meet/" class="text-muted">
+    <a href="https://github.com/publiccodenet/publiccode.net/issues" class="text-muted">
         report issues</a>
 </div>
 </body>

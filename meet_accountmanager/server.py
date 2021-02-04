@@ -4,10 +4,13 @@ import time
 import os
 import subprocess
 from subprocess import STDOUT, PIPE
+from datetime import datetime, timedelta, timezone
+import sqlite3
+from contextlib import closing
 from secrets import token_hex
 from logging.handlers import RotatingFileHandler
 import requests
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, g
 from flask.logging import default_handler
 
 app = Flask(__name__)
@@ -22,7 +25,25 @@ config_dir = os.path.realpath('/etc/meet-accountmanager')
 password_path = os.path.join(config_dir, 'password')
 salt_path = os.path.join(config_dir, 'salt')
 state_dir = os.path.realpath('/var/lib/meet-accountmanager')
-tokens_path = os.path.join(state_dir, 'tokens.json')
+db_path = os.path.join(state_dir, 'state.sqlite3')
+
+
+def close_db(e=None):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
+app.teardown_appcontext(close_db)
+
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect(
+            db_path,
+            detect_types=sqlite3.PARSE_DECLTYPES
+        )
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
 
 def register_account(user, password):
     completed_process = subprocess.run(['/usr/bin/sudo', '-u', 'prosody', '/usr/bin/prosodyctl', '--config', '/etc/prosody/prosody.cfg.lua', 'register', user, 'jitsi.localdev', password], stdout=PIPE, stderr=STDOUT, encoding="utf-8")
@@ -42,25 +63,22 @@ def auth_ticketmaster(password):
 
 
 def auth_token(token):
+    db = get_db()
+    results = db.execute("SELECT * FROM tokens WHERE token = ?", (token,)).fetchall()
+    if len(results) > 0:
+        with db:
+            db.execute("DELETE FROM tokens WHERE token = ?", (token,))
+        return True
     time.sleep(2)
-    with open(tokens_path, 'r') as f:
-        tokens = json.loads(f.read())
-    if token not in tokens:
-        return False
-    tokens.remove(token)
-    with open(tokens_path, 'w') as f:
-        f.write(json.dumps(tokens))
-    return True
+    return False
 
 
 def gen_token():
     token = token_hex(32)
-    with open(tokens_path, 'r+') as f:
-        f.seek(0)
-        tokens = json.loads(f.read())
-        tokens.append(token)
-        f.seek(0)
-        f.write(json.dumps(tokens))
+    expiry = datetime.now() + timedelta(days=7)
+    db = get_db()
+    with db:
+        db.execute("INSERT INTO tokens (token, expiry) VALUES (?, ?)", (token, expiry))
     return token
 
 
@@ -89,7 +107,8 @@ def create_user():
 
 @app.route("/create", methods=['POST'])
 def create_user_post():
-    if not auth_token(request.form['token'].strip()):
+    token = request.form['token'].strip()
+    if not auth_token(token):
         time.sleep(10)
         return render_template('create.html', invalid_token=True)
 
