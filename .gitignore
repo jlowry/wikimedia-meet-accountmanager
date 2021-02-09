@@ -135,6 +135,7 @@ dmypy.json
 # building .debs
 .pybuild/
 debian/.debhelper/
+debian/*.debhelper
 debian/debhelper-build-stamp
 debian/python3-meet-accountmanager.postinst.debhelper
 debian/python3-meet-accountmanager.prerm.debhelper
