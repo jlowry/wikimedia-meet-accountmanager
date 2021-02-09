@@ -12,6 +12,13 @@ from logging.handlers import RotatingFileHandler
 import requests
 from flask import Flask, render_template, request, redirect, url_for, g
 from flask.logging import default_handler
+from flask_wtf.csrf import CSRFProtect
+
+class CreateUserForm(FlaskForm):
+    name = StringField('name', validators=[DataRequired()])
+    password = PasswordField('New Password', [InputRequired(), EqualTo('confirm', message='Passwords must match')])
+    confirm = PasswordField('Repeat Password')
+
 
 app = Flask(__name__)
 if 'APP_SETTINGS' in os.environ:
@@ -19,6 +26,8 @@ if 'APP_SETTINGS' in os.environ:
     if 'LOG_FILE' in app.config:
         app.logger.removeHandler(default_handler)
         app.logger.addHandler(RotatingFileHandler(app.config['LOG_FILE'], maxBytes=2000, backupCount=10))
+
+csrf = CSRFProtect(app)
 
 clients = ['http://jitsi.meet.eqiad.wmflabs:4000']
 config_dir = os.path.realpath('/etc/meet-accountmanager')
@@ -64,18 +73,19 @@ def auth_ticketmaster(password):
 
 def auth_token(token):
     db = get_db()
-    results = db.execute("SELECT * FROM tokens WHERE token = ?", (token,)).fetchall()
-    if len(results) > 0:
-        with db:
-            db.execute("DELETE FROM tokens WHERE token = ?", (token,))
-        return True
-    time.sleep(2)
+    results = db.execute("SELECT token, expiry "[timestamp]" FROM tokens WHERE token = ?", (token,)).fetchall()
+    for result in results:
+        if result['expiry'] > datetime.now(timezone.utc):
+            return True
     return False
 
+def delete_token(token):
+    with db:
+        db.execute("DELETE FROM tokens WHERE token = ?", (token,))
 
 def gen_token():
     token = token_hex(32)
-    expiry = datetime.now() + timedelta(days=7)
+    expiry = datetime.now(timezone.utc) + timedelta(days=7)
     db = get_db()
     with db:
         db.execute("INSERT INTO tokens (token, expiry) VALUES (?, ?)", (token, expiry))
@@ -102,21 +112,34 @@ def generate_token_post():
 
 @app.route("/create", methods=['GET'])
 def create_user():
-    return render_template('create.html')
-
-
-@app.route("/create", methods=['POST'])
-def create_user_post():
-    token = request.form['token'].strip()
+    token = request.args.get('token', '')
     if not auth_token(token):
         time.sleep(10)
         return render_template('create.html', invalid_token=True)
 
-    user = request.form['user']
-    password = request.form['password']
-    register_account(user, password)
+    return render_template('create.html', token=token)
 
-    return render_template('success.html')
+
+@app.route("/create", methods=['POST'])
+def create_user_post():
+    form = CreateUserForm()
+    if form.validate_on_submit():
+        register_account(user, password)
+        return render_template('success.html')
+    
+    token = request.form['token'].strip()
+    if not auth_token(token):
+        time.sleep(10)
+        return render_template('create.html', invalid_token=True)
+    
+    user = request.form['user']
+    if not valid_username(user):
+    
+    password = request.form['password']
+    invalid_password = not valid_password(password):
+    
+    return render_template('create.html', invalid_token=True)
+
 
 
 if __name__ == "__main__":
