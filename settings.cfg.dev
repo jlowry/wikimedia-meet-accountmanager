@@ -1,0 +1,4 @@
+LOG_FILE = '/Users/james/Code/wikimedia-meet-accountmanager/app.log'
+STATE_DIR = '/Users/james/Code/wikimedia-meet-accountmanager'
+CONFIG_DIR = '/Users/james/Code/wikimedia-meet-accountmanager'
+

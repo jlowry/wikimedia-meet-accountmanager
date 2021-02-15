@@ -142,3 +142,10 @@ debian/python3-meet-accountmanager.prerm.debhelper
 debian/python3-meet-accountmanager.substvars
 debian/python3-meet-accountmanager/
 debian/files
+
+# dev files
+*.swp
+app.log*
+key
+password
+state.sqlite3

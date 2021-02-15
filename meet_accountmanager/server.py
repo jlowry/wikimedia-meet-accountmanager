@@ -9,16 +9,50 @@ import sqlite3
 from contextlib import closing
 from secrets import token_hex
 from logging.handlers import RotatingFileHandler
-import requests
 from flask import Flask, render_template, request, redirect, url_for, g
 from flask.logging import default_handler
+from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
+from wtforms import StringField, HiddenField, PasswordField
+from wtforms.validators import DataRequired, InputRequired, EqualTo, ValidationError
+import re
+
+class ValidUsernameCharacters:
+    def __init__(self):
+        self.re = re.compile("""^\w[\w.-_]{2,64}$""")
+
+    def __call__(self, form, field):
+        if not self.re.match(field.data):
+            raise ValidationError("Username must contain only word characters and period '.', hyphen '-', and underscore '_'.")
+
+
+class StartWithAWordCharacter:
+    def __init__(self):
+        self.re = re.compile("""^\w""")
+
+    def __call__(self, form, field):
+        if not self.re.match(field.data):
+            raise ValidationError("Username must be start with a word character.")
+
+
+class UsernameIsAvailable:
+    def __init__(self):
+        self.re = re.compile("""^\s""")
+
+    def __call__(self, form, field):
+        if not self.re.match(field.data):
+            raise ValidationError("Please choose a different username this one is not available.")
+
 
 class CreateUserForm(FlaskForm):
-    name = StringField('name', validators=[DataRequired()])
+    username = StringField('Login Id', validators=[DataRequired(), StartWithAWordCharacter(), ValidUsernameCharacters(), UsernameIsAvailable()])
     password = PasswordField('New Password', [InputRequired(), EqualTo('confirm', message='Passwords must match')])
     confirm = PasswordField('Repeat Password')
+    token = HiddenField('token', [InputRequired()])
 
+
+class GenerateTokenForm(FlaskForm):
+    token = StringField('token', validators=[DataRequired()])
 
 app = Flask(__name__)
 if 'APP_SETTINGS' in os.environ:
@@ -27,15 +61,19 @@ if 'APP_SETTINGS' in os.environ:
         app.logger.removeHandler(default_handler)
         app.logger.addHandler(RotatingFileHandler(app.config['LOG_FILE'], maxBytes=2000, backupCount=10))
 
+    config_dir = os.path.realpath(app.config.get('CONFIG_DIR', '/etc/meet-accountmanager'))
+    state_dir = os.path.realpath(app.config.get('STATE_DIR', '/var/lib/meet-accountmanager'))
+
+with open(os.path.join(config_dir, 'key'), 'r') as key_file:
+    app.secret_key = bytes.fromhex(key_file.read())
+
 csrf = CSRFProtect(app)
 
-clients = ['http://jitsi.meet.eqiad.wmflabs:4000']
-config_dir = os.path.realpath('/etc/meet-accountmanager')
+#config_dir = os.path.realpath('/etc/meet-accountmanager')
 password_path = os.path.join(config_dir, 'password')
 salt_path = os.path.join(config_dir, 'salt')
-state_dir = os.path.realpath('/var/lib/meet-accountmanager')
+#state_dir = os.path.realpath('/var/lib/meet-accountmanager')
 db_path = os.path.join(state_dir, 'state.sqlite3')
-
 
 def close_db(e=None):
     db = g.pop('db', None)
@@ -45,6 +83,7 @@ def close_db(e=None):
 app.teardown_appcontext(close_db)
 
 def get_db():
+    app.logger.debug(f"db_path: {db_path}") 
     if 'db' not in g:
         g.db = sqlite3.connect(
             db_path,
@@ -73,10 +112,11 @@ def auth_ticketmaster(password):
 
 def auth_token(token):
     db = get_db()
-    results = db.execute("SELECT token, expiry "[timestamp]" FROM tokens WHERE token = ?", (token,)).fetchall()
+    results = db.execute("""SELECT expiry as "expiry [timestamp]" FROM tokens WHERE token = ?""", (token,)).fetchall()
     for result in results:
-        if result['expiry'] > datetime.now(timezone.utc):
+        if result[0] > datetime.utcnow():
             return True
+
     return False
 
 def delete_token(token):
@@ -85,7 +125,7 @@ def delete_token(token):
 
 def gen_token():
     token = token_hex(32)
-    expiry = datetime.now(timezone.utc) + timedelta(days=7)
+    expiry = datetime.utcnow() + timedelta(days=7)
     db = get_db()
     with db:
         db.execute("INSERT INTO tokens (token, expiry) VALUES (?, ?)", (token, expiry))
@@ -99,7 +139,8 @@ def hello():
 
 @app.route("/generate_token", methods=['GET'])
 def generate_token():
-    return render_template('generate.html')
+    form = GenerateTokenForm()
+    return render_template('generate.html', form=form)
 
 
 @app.route("/generate_token", methods=['POST'])
@@ -114,32 +155,26 @@ def generate_token_post():
 def create_user():
     token = request.args.get('token', '')
     if not auth_token(token):
-        time.sleep(10)
-        return render_template('create.html', invalid_token=True)
-
-    return render_template('create.html', token=token)
+        return render_template('invalidinvite.html', invalid_token=True)
+    
+    form = CreateUserForm(token=token)
+    
+    return render_template('create.html', form=form)
 
 
 @app.route("/create", methods=['POST'])
 def create_user_post():
+    token = request.form.get('token', '')
+    if not auth_token(token):
+        return render_template('invalidinvite.html', invalid_token=True)
+
     form = CreateUserForm()
     if form.validate_on_submit():
-        register_account(user, password)
+        register_account(form.username, form.password)
+        delete_token(form.token)
         return render_template('success.html')
     
-    token = request.form['token'].strip()
-    if not auth_token(token):
-        time.sleep(10)
-        return render_template('create.html', invalid_token=True)
-    
-    user = request.form['user']
-    if not valid_username(user):
-    
-    password = request.form['password']
-    invalid_password = not valid_password(password):
-    
-    return render_template('create.html', invalid_token=True)
-
+    return render_template('create.html', form=form)
 
 
 if __name__ == "__main__":

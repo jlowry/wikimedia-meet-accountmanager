@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
     <form action="{{ url_for('generate_token_post') }}" method="post">
+        {{ form.hidden_tag() }}
         <div class="form-group">
-            <label for="token">Administrative (ticketmaster) token</label>
-            <input type="password" id="token" name="token" class="form-control">
+            {{ form.token.label }} {{ form.token(size=20) }}
         </div>
-
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 {% endblock %}

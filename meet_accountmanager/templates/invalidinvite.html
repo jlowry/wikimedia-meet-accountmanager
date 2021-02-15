@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+{% block content %}
+    {% if invalid_token %}
+    <div class="alert alert-danger" role="alert">
+        This invition to create an account is invalid.
+    </div>
+    {% endif %}
+    {% if expired_token %}
+    <div class="alert alert-danger" role="alert">
+        This invition to create an account has expired.
+    </div>
+    {% endif %}
+{% endblock %}
