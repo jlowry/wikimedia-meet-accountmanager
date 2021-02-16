@@ -9,7 +9,12 @@ The server part allows users to create tokens and use a token to create an accou
 Install dependencies. We do this through the package manager so they benefit from
 security updates:
 ```
-pip3 install gunicorn Flask flask-WTF
+apt install python3-gunicorn python3-flask python3-flaskext.wtf
+```
+
+Get package from GitHub releases:
+```
+curl -LO https://github.com/jlowry/wikimedia-meet-accountmanager/releases/download/0.1.0-1/python3-meet-accountmanager_0.1.0-1_all.deb
 ```
 
 You can install the `.deb` package using:

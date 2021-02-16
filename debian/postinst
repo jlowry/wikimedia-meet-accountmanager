@@ -21,8 +21,10 @@ SUDOERS_FILE=/etc/sudoers.d/meet-accountmanager
 CONFIG_DIR=/etc/meet-accountmanager
 SALT_FILE="$CONFIG_DIR/salt"
 TOKEN_FILE="$CONFIG_DIR/token"
+KEY_FILE="$CONFIG_DIR/key"
 USER=meet-accountmanager
 STATE_DIR=/var/lib/meet-accountmanager
+DATABASE_FILE="$STATE_DIR/state.sqlite3"
 LOG_DIR=/var/log/meet-accountmanager
 
 case "$1" in
@@ -32,6 +34,10 @@ case "$1" in
 	    mkdir -p "$STATE_DIR" \
 	    && echo "Created state dir $STATE_DIR" \
 	    && chown -R $USER:$USER "$STATE_DIR"
+	fi
+	if [ -d "$STATE_DIR" -a ! -f "DATABASE_FILE" ]; then
+        cd $STATE_DIR
+	    /usr/bin/python3 /usr/lib/python3/dist-packages/meet_accountmanager/create_database.py
 	fi
 	if [ ! -d "$LOG_DIR" ]; then
 	    mkdir -p "$LOG_DIR" \
