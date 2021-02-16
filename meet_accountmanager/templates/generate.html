@@ -1,10 +1,9 @@
 {% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
 {% block content %}
     <form action="{{ url_for('generate_token_post') }}" method="post">
         {{ form.hidden_tag() }}
-        <div class="form-group">
-            {{ form.token.label }} {{ form.token(size=20) }}
-        </div>
+        {{ render_field(form.token) }}
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 {% endblock %}

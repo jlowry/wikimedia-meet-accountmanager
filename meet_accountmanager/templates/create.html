@@ -1,23 +1,14 @@
 {% extends "base.html" %}
 {% from "_formhelpers.html" import render_field %}
 {% block content %}
+    <h2>Create account</h2>
+    <p>Enter your details below to create an account on <a target="_blank" href="https://meet.publiccode.net" class="text-muted">meet.publiccode.net</a>.</p>
+
     <form action="{{ url_for('create_user_post') }}" method="post">
         {{ form.hidden_tag() }}
         {{ render_field(form.username) }}
         {{ render_field(form.password) }}
         {{ render_field(form.confirm) }}
-
-        <div class="form-group">
-            <!-- {{ form.token.label }} -->
-            <!-- {{ form.token(size=20) }} -->
-            <!-- <label for="password">Password</label> -->
-            <!-- <input type="password" id="password" name="password" class="form-control"> -->
-            <small class="form-text text-muted">Do not re-use any passwords used elsewhere and use only English letters and numbers.</small>
-        </div>
-
-        <div class="form-group">
-            <small class="form-text text-muted">You can request an account from <a href="https://meta.wikimedia.org/wiki/Wikimedia_Meet">a ticketmaster</a>.</small>
-        </div>
 
         <button type="submit" class="btn btn-primary">Create account</button>
     </form>

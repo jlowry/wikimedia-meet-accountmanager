@@ -1,8 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
+    <h2>Invitation created</h2>
     <p>
-        Success. Generated token is:
+    This invitation can be used once to create one account.
     </p>
-
-    <pre><code>{{ token }}</code></pre>
+    <p>
+    Copy the URL below and share it.
+    </p>
+    <script async="true" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" 
+        onload="new ClipboardJS('.copy-to-clipboard');"></script>
+    <pre><code id="invition-url">{{ url_for('create_user', _external=True) }}?token={{ token }}</code></pre>
+    <button type="button" class="btn btn-primary copy-to-clipboard" data-clipboard-target="#invition-url">
+            Copy to clipboard
+    </button>
 {% endblock %}

@@ -45,8 +45,8 @@ class UsernameIsAvailable:
 
 
 class CreateUserForm(FlaskForm):
-    username = StringField('Login Id', validators=[DataRequired(), StartWithAWordCharacter(), ValidUsernameCharacters(), UsernameIsAvailable()])
-    password = PasswordField('New Password', [InputRequired(), EqualTo('confirm', message='Passwords must match')])
+    username = StringField('Login Id', validators=[DataRequired(), StartWithAWordCharacter(), ValidUsernameCharacters(), UsernameIsAvailable()], description="Use only letters, numbers, period, hypthen, and underscore. Must be at least 3 characters. Must not start with a period.")
+    password = PasswordField('New Password', [InputRequired(), EqualTo('confirm', message='Passwords must match')], description='Choose a strong password not used elsewhere. Must be at least 8 characters.')
     confirm = PasswordField('Repeat Password')
     token = HiddenField('token', [InputRequired()])
 
@@ -69,10 +69,8 @@ with open(os.path.join(config_dir, 'key'), 'r') as key_file:
 
 csrf = CSRFProtect(app)
 
-#config_dir = os.path.realpath('/etc/meet-accountmanager')
 password_path = os.path.join(config_dir, 'password')
 salt_path = os.path.join(config_dir, 'salt')
-#state_dir = os.path.realpath('/var/lib/meet-accountmanager')
 db_path = os.path.join(state_dir, 'state.sqlite3')
 
 def close_db(e=None):
@@ -116,6 +114,9 @@ def auth_token(token):
     for result in results:
         if result[0] > datetime.utcnow():
             return True
+        else:
+            # delete expired token
+            delete_token(token)
 
     return False
 

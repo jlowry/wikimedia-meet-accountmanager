@@ -6,23 +6,41 @@ The server part allows users to create tokens and use a token to create an accou
 
 
 # Installation
+Install dependencies. We do this through the package manager so they benefit from
+security updates:
+```
+pip3 install gunicorn Flask flask-WTF
+```
 
 You can install the `.deb` package using:
 ```
+sudo apt install ./python3-meet-accountmanager_0.1.0-1_all.deb
+```
+You will be asked to enter a password for that is used for
+creating invitations.
 
+You will also need to add the following two snippets to the  nginx conf file for your site.
+
+Outside a `server` block:
+```
+upstream accountmanager {
+    # fail_timeout=0 means we always retry an upstream even if it failed
+    # to return a good HTTP response
+    server unix:/run/meet-accountmanager.sock fail_timeout=0;
+}
 ```
 
-You will also need to add the following to a nginx.conf file:
+Inside the server block:
 ```
     location ^~ /accountmanager/ {
-      rewrite /accountmanager/(.*) /$1  break;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto $scheme;
-      proxy_set_header Host $http_host;
-      # we don't want nginx trying to do something clever with
-      # redirects, we set the Host: header above already.
-      proxy_redirect ~^https:\/\/[^/]*/(.*) /accountmanager/$1;
-      proxy_pass http://accountmanager;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host $http_host;
+        # we don't want nginx trying to do something clever with
+        # redirects, we set the Host: header above already.
+        proxy_set_header SCRIPT_NAME /accountmanager;
+        proxy_redirect off;
+        proxy_pass http://accountmanager;
     }
 ```
 
