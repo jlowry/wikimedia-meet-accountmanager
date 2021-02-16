@@ -11,7 +11,7 @@ Vcs-Git: https://github.com/publiccodenet/wikimedia-meet-accountmanager.git
 
 Package: python3-meet-accountmanager
 Architecture: all
-Depends: ${python3:Depends}, ${misc:Depends}, python3-gunicorn (>= 20.0.0), python3-flask (>= 1.1.1), python3-flaskext.wtf (>= 0.14.3)
+Depends: ${python3:Depends}, ${misc:Depends}, python3-gunicorn (>= 20.0), python3-flask (>= 1.1), python3-flaskext.wtf (>= 0.14)
 Suggests: python-meet-accountmanager-doc
 Description: A Flask app for creating accounts in Jitsi. (Python 3)
  <insert long description, indented with spaces>

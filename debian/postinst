@@ -35,9 +35,10 @@ case "$1" in
 	    && echo "Created state dir $STATE_DIR" \
 	    && chown -R $USER:$USER "$STATE_DIR"
 	fi
-	if [ -d "$STATE_DIR" -a ! -f "DATABASE_FILE" ]; then
+	if [ -d "$STATE_DIR" -a ! -f "$DATABASE_FILE" ]; then
         cd $STATE_DIR
-	    /usr/bin/python3 /usr/lib/python3/dist-packages/meet_accountmanager/create_database.py
+	    /usr/bin/python3 /usr/lib/python3/dist-packages/meet_accountmanager/create_database.py \
+	    && chown -R $USER:$USER "$DATABASE_FILE"
 	fi
 	if [ ! -d "$LOG_DIR" ]; then
 	    mkdir -p "$LOG_DIR" \

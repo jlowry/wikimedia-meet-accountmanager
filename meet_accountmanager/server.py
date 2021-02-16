@@ -61,8 +61,8 @@ if 'APP_SETTINGS' in os.environ:
         app.logger.removeHandler(default_handler)
         app.logger.addHandler(RotatingFileHandler(app.config['LOG_FILE'], maxBytes=2000, backupCount=10))
 
-    config_dir = os.path.realpath(app.config.get('CONFIG_DIR', '/etc/meet-accountmanager'))
-    state_dir = os.path.realpath(app.config.get('STATE_DIR', '/var/lib/meet-accountmanager'))
+config_dir = os.path.realpath(app.config.get('CONFIG_DIR', '/etc/meet-accountmanager'))
+state_dir = os.path.realpath(app.config.get('STATE_DIR', '/var/lib/meet-accountmanager'))
 
 with open(os.path.join(config_dir, 'key'), 'r') as key_file:
     app.secret_key = bytes.fromhex(key_file.read())
