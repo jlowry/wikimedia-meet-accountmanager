@@ -20,7 +20,7 @@ set -e
 SUDOERS_FILE=/etc/sudoers.d/meet-accountmanager
 CONFIG_DIR=/etc/meet-accountmanager
 SALT_FILE="$CONFIG_DIR/salt"
-TOKEN_FILE="$CONFIG_DIR/token"
+TOKEN_FILE="$CONFIG_DIR/password"
 KEY_FILE="$CONFIG_DIR/key"
 USER=meet-accountmanager
 STATE_DIR=/var/lib/meet-accountmanager
@@ -51,7 +51,13 @@ case "$1" in
 	fi
 	if [ -d "$CONFIG_DIR" ] && ! [ -f "$SALT_FILE" -a -f "$TOKEN_FILE" ]; then
 	    cd $CONFIG_DIR
-	    /usr/bin/python3 /usr/lib/python3/dist-packages/meet_accountmanager/create_ticketmaster_token.py
+	    (umask 026; /usr/bin/python3 /usr/lib/python3/dist-packages/meet_accountmanager/create_ticketmaster_token.py) \
+	    && chown root:$USER "$SALT_FILE" "$TOKEN_FILE"
+	fi
+	if [ -d "$CONFIG_DIR" -a ! -f "$KEY_FILE" ]; then
+	    cd $CONFIG_DIR
+	    (umask 026; /usr/bin/python3 /usr/lib/python3/dist-packages/meet_accountmanager/create_flask_key.py) \
+	    && chown root:$USER "$KEY_FILE"
 	fi
 	SUDOER=$(cat <<-'EOF'
 		Defaults:meet-accountmanager !requiretty

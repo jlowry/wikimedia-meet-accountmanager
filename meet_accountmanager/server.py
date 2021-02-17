@@ -13,6 +13,7 @@ from flask import Flask, render_template, request, redirect, url_for, g
 from flask.logging import default_handler
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
+from os import urandom
 from wtforms import StringField, HiddenField, PasswordField
 from wtforms.validators import DataRequired, InputRequired, EqualTo, ValidationError
 import re
@@ -64,8 +65,12 @@ if 'APP_SETTINGS' in os.environ:
 config_dir = os.path.realpath(app.config.get('CONFIG_DIR', '/etc/meet-accountmanager'))
 state_dir = os.path.realpath(app.config.get('STATE_DIR', '/var/lib/meet-accountmanager'))
 
-with open(os.path.join(config_dir, 'key'), 'r') as key_file:
-    app.secret_key = bytes.fromhex(key_file.read())
+key_path = os.path.join(config_dir, 'key')
+if os.path.isfile(key_path):
+    with open(key_path, 'r') as key_file:
+        app.secret_key = bytes.fromhex(key_file.read())
+else:
+    app.secret_key = urandom(32)
 
 csrf = CSRFProtect(app)
 
