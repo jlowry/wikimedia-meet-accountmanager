@@ -46,7 +46,7 @@ class UsernameIsAvailable:
 
 
 class CreateUserForm(FlaskForm):
-    username = StringField('Login Id', validators=[DataRequired(), StartWithAWordCharacter(), ValidUsernameCharacters(), UsernameIsAvailable()], description="Use only letters, numbers, period, hypthen, and underscore. Must be at least 3 characters. Must not start with a period.")
+    username = StringField('Login Id', validators=[DataRequired(), StartWithAWordCharacter(), ValidUsernameCharacters()], description="Use only letters, numbers, period, hypthen, and underscore. Must be at least 3 characters. Must not start with a period.")
     password = PasswordField('New Password', [InputRequired(), EqualTo('confirm', message='Passwords must match')], description='Choose a strong password not used elsewhere. Must be at least 8 characters.')
     confirm = PasswordField('Repeat Password')
     token = HiddenField('token', [InputRequired()])
@@ -105,7 +105,6 @@ def register_account(user, password):
         app.logger.error(f"prosodyctl output:\n{completed_process.stdout}")
 
 def auth_ticketmaster(password):
-    time.sleep(2)
     with open(password_path, 'r') as password_file, open(salt_path, 'r') as salt_file:
         ticketmaster_password = bytes.fromhex(password_file.read())
         salt = bytes.fromhex(salt_file.read())
