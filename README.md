@@ -9,7 +9,7 @@ The server part allows users to create tokens and use a token to create an accou
 Install dependencies. We do this through the package manager so they benefit from
 security updates:
 ```
-apt install python3-gunicorn python3-flask python3-flaskext.wtf
+apt install gunicorn python3-flask python3-flaskext.wtf
 ```
 
 Get package from GitHub releases:
