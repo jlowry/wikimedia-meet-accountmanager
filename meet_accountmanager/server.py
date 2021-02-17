@@ -53,7 +53,7 @@ class CreateUserForm(FlaskForm):
 
 
 class GenerateTokenForm(FlaskForm):
-    token = StringField('token', validators=[DataRequired()])
+    token = PasswordField('Password', validators=[DataRequired()])
 
 app = Flask(__name__)
 if 'APP_SETTINGS' in os.environ:
